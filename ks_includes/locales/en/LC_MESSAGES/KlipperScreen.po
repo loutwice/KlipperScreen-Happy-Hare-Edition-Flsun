@@ -17,6 +17,178 @@ msgstr ""
 msgid "%s will be updated to version"
 msgstr ""
 
+msgid "Remaining weight"
+msgstr ""
+
+msgid "Remaining length"
+msgstr ""
+
+msgid "Configurations"
+msgstr ""
+
+msgid "Show Scrollbars Arrows"
+msgstr ""
+
+msgid "Touch sound (BigTreeTech Pad7)"
+msgstr ""
+
+msgid ""
+"not found!\n"
+"Please update your configuration files."
+msgstr ""
+
+msgid "Z Offset Calibration"
+msgstr ""
+
+msgid "EndStops Calibration"
+msgstr ""
+
+msgid "Automatic Delta Calibration"
+msgstr ""
+
+msgid "Manual Delta Calibration"
+msgstr ""
+
+msgid "Apply a safety Offset"
+msgstr ""
+
+msgid ""
+"Do you want to apply a 1mm safety offset?\n"
+"\n"
+"This could prevent the nozzle from scraping or sinking on the bed in the "
+"event of an incorrect adjustment of Z Offset.\n"
+"\n"
+"Then start a print and adjust the first layer using babysteps via the 'Fine "
+"Tuning' button."
+msgstr ""
+
+msgid "Min"
+msgstr ""
+
+msgid "Please wait..."
+msgstr ""
+
+msgid "No mesh has been loaded"
+msgstr ""
+
+msgid "Splash Screen"
+msgstr ""
+
+msgid "Neopixels"
+msgstr ""
+
+msgid "On"
+msgstr ""
+
+msgid "Blue"
+msgstr ""
+
+msgid "Red"
+msgstr ""
+
+msgid "Green"
+msgstr ""
+
+msgid "Yellow"
+msgstr ""
+
+msgid "Orange"
+msgstr ""
+
+msgid "Violet"
+msgstr ""
+
+msgid "Hotend (All)"
+msgstr ""
+
+msgid "Hotend (One by One)"
+msgstr ""
+
+msgid "Bed (All)"
+msgstr ""
+
+msgid "Bed (One by One)"
+msgstr ""
+
+msgid "Progress (All)"
+msgstr ""
+
+msgid "Progress (One by One)"
+msgstr ""
+
+msgid "Speed (All)"
+msgstr ""
+
+msgid "Speed (One by One)"
+msgstr ""
+
+msgid "Print Status"
+msgstr ""
+
+msgid "Reprint"
+msgstr ""
+
+msgid "Auto Calibration"
+msgstr ""
+
+msgid "Manual Calibration"
+msgstr ""
+
+msgid "NOTE: Edit your printer.cfg to save manual calibration changes."
+msgstr ""
+
+msgid "Endstops Calibrate"
+msgstr ""
+
+msgid "Calibrations"
+msgstr ""
+
+msgid "Multiple Calibrations"
+msgstr ""
+
+msgid "Please plug in leveling switch before Delta Calibration."
+msgstr ""
+
+msgid "Please plug in leveling switch before auto-leveling."
+msgstr ""
+
+msgid ""
+"Please plug in leveling switch before mesuring Z-Offset.\n"
+"Once the hotend is up, it can be removed to perform the measurement."
+msgstr ""
+
+msgid "Do you want to start Endstops calibration?"
+msgstr ""
+
+msgid ""
+"Do you want to start Manual Delta calibration with 'paper test'?\n"
+"\n"
+"It involves placing a piece of 'copy machine paper' between bed and nozzle, "
+"and then moving the nozzle to different Z heights until one feels a small "
+"amount of friction when pushing the paper back and forth.\n"
+"\n"
+"It's not needed to plug in leveling switch for this calibration."
+msgstr ""
+
+msgid "LED"
+msgstr ""
+
+msgid "Hotend LED On"
+msgstr ""
+
+msgid "Hotend LED Off"
+msgstr ""
+
+msgid "Logo LED On"
+msgstr ""
+
+msgid "Logo LED Off"
+msgstr ""
+
+msgid "Continue"
+msgstr ""
+
+
 msgid "(default)"
 msgstr ""
 
