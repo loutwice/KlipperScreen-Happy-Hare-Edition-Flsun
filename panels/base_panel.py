@@ -92,7 +92,7 @@ class BasePanel(ScreenPanel):
         self.control['time'] = Gtk.Label(label="00:00 AM")
         self.control['time_box'] = Gtk.Box()
         self.control['time_box'].set_halign(Gtk.Align.END)
-        self.control['time_box'].pack_end(self.control['time'], True, True, 10)
+        self.control['time_box'].pack_end(self.control['time'], True, True, 20) # Changes
 
         self.titlebar = Gtk.Box(spacing=5)
         self.titlebar.get_style_context().add_class("title_bar")
@@ -326,7 +326,7 @@ class BasePanel(ScreenPanel):
     def show_update_dialog(self):
         if self.update_dialog is not None:
             return
-        button = [{"name": _("Finish"), "response": Gtk.ResponseType.OK}]
+        button = [{"name": _("Close"), "response": Gtk.ResponseType.OK}] # Changes
         self.labels['update_progress'] = Gtk.Label()
         self.labels['update_progress'].set_halign(Gtk.Align.START)
         self.labels['update_progress'].set_valign(Gtk.Align.START)
