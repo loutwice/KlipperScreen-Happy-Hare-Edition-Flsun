@@ -43,7 +43,8 @@ class KlippyGtk:
         self.img_scale = self.font_size * 2
         self.button_image_scale = 1.38
         self.bsidescale = .65  # Buttons with image at the side
-
+        self.touch_sound_value = screen._config.get_main_config().getboolean("touch_sound", None) # Changes
+        
         if self.font_size_type == "max":
             self.font_size = self.font_size * 1.2
             self.bsidescale = .7
@@ -186,6 +187,8 @@ class KlippyGtk:
         if style is not None:
             b.get_style_context().add_class(style)
         b.connect("clicked", self.screen.reset_screensaver_timeout)
+        if self.touch_sound_value == True: # Changes
+            b.connect("pressed", self.screen._button_pressed_feedback) # Changes
         return b
 
     @staticmethod
@@ -223,6 +226,8 @@ class KlippyGtk:
         for button in buttons:
             dialog.add_button(button['name'], button['response'])
             button = dialog.get_widget_for_response(button['response'])
+            if self.touch_sound_value == True: # Changes
+                button.connect("pressed", self.screen._button_pressed_feedback) # Changes
             button.set_size_request((self.width - 30) / 3, self.height / 5)
             format_label(button, 3)
 
@@ -275,6 +280,8 @@ class KlippyGtk:
         b.set_hexpand(True)
         b.set_vexpand(True)
         b.connect("clicked", self.screen.reset_screensaver_timeout)
+        if self.touch_sound_value == True: # Changes
+            b.connect("pressed", self.screen._button_pressed_feedback) # Changes
         return b
 
     def ScrolledWindow(self, steppers=True):
