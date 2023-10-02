@@ -175,7 +175,7 @@ class KlipperScreenConfig:
                 bools = (
                     'invert_x', 'invert_y', 'invert_z', '24htime', 'only_heaters', 'show_cursor', 'confirm_estop',
                     'autoclose_popups', 'use_dpms', 'use_default_menu', 'side_macro_shortcut', 'use-matchbox-keyboard',
-                    'show_heater_power', "show_scroll_steppers", "auto_open_extrude"
+                    'show_heater_power', "show_scroll_steppers", "auto_open_extrude", "touch_sound",
                     'side_mmu_shortcut', 'mmu_color_gates', 'mmu_color_filament', 'mmu_bold_filament', "mmu_use_spoolman", # Happy Hare
                 )
                 strs = (
@@ -316,10 +316,13 @@ class KlipperScreenConfig:
                                   "value": "True"}},
             {"show_heater_power": {"section": "main", "name": _("Show Heater Power"), "type": "binary",
                                    "value": "False", "callback": screen.reload_panels}},
-            {"show_scroll_steppers": {"section": "main", "name": _("Show Scrollbars Buttons"), "type": "binary",
+            {"show_scroll_steppers": {"section": "main", "name": _("Show Scrollbars Arrows"), "type": "binary",
                                       "value": "False", "callback": screen.reload_panels}},
             {"auto_open_extrude": {"section": "main", "name": _("Auto-open Extrude On Pause"), "type": "binary",
                                    "value": "True", "callback": screen.reload_panels}},
+            {"touch_sound": {"section": "main", "name": _("Touch sound (BigTreeTech Pad7)"), "type": "binary",
+                                   "value": "False", "callback": screen.restart_ks}},
+            # End Changes
             # {"": {"section": "main", "name": _(""), "type": ""}}
         ]
 
@@ -451,6 +454,16 @@ class KlipperScreenConfig:
         if os.path.exists(file):
             return file
 
+         # Start Changes
+        klipper_config = os.path.join(os.path.expanduser("~/"), "printer_1_data", "config")
+        file = os.path.join(klipper_config, self.configfile_name)
+        if os.path.exists(file):
+            return file
+        file = os.path.join(klipper_config, self.configfile_name.lower())
+        if os.path.exists(file):
+            return file
+        # End Changes
+        
         # OLD config folder
         klipper_config = os.path.join(os.path.expanduser("~/"), "klipper_config")
         file = os.path.join(klipper_config, self.configfile_name)
@@ -560,9 +573,12 @@ class KlipperScreenConfig:
         else:
             filepath = os.path.expanduser("~/")
             klipper_config = os.path.join(filepath, "printer_data", "config")
+            klipper_1_config = os.path.join(filepath, "printer_1_data", "config") # Changes
             old_klipper_config = os.path.join(filepath, "klipper_config")
             if os.path.exists(klipper_config):
                 filepath = os.path.join(klipper_config, self.configfile_name)
+            elif os.path.exists(klipper_1_config): # Changes
+                filepath = os.path.join(klipper_1_config, self.configfile_name) # Changes
             elif os.path.exists(old_klipper_config):
                 filepath = os.path.join(old_klipper_config, self.configfile_name)
             else:
