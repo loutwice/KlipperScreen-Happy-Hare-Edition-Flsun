@@ -18,14 +18,18 @@ class Panel(ScreenPanel):
         self.profiles = {}
         self.buttons = {
             'add': self._gtk.Button("increase", " " + _("Add profile"), "color1", self.bts, Gtk.PositionType.LEFT, 1),
-            'calib': self._gtk.Button("refresh", " " + _("Calibrate"), "color3", self.bts, Gtk.PositionType.LEFT, 1),
+            'calib': self._gtk.Button("refresh", " " + _("Bed Level"), "color3", self.bts, Gtk.PositionType.LEFT, 1), # Changes
             'clear': self._gtk.Button("cancel", " " + _("Clear"), "color2", self.bts, Gtk.PositionType.LEFT, 1),
         }
         self.buttons['add'].connect("clicked", self.show_create_profile)
         self.buttons['add'].set_hexpand(True)
         self.buttons['clear'].connect("clicked", self.send_clear_mesh)
         self.buttons['clear'].set_hexpand(True)
-        self.buttons['calib'].connect("clicked", self.calibrate_mesh)
+        #self.buttons['calib'].connect("clicked", self.calibrate_mesh) # Changes
+        script = {"script": "BED_LEVELING"} # Changes
+        self.buttons['calib'].connect("clicked", self._screen._confirm_send_action,
+                                          _("Please plug in leveling switch before auto-leveling."),
+                                          "printer.gcode.script", script) # Changes
         self.buttons['calib'].set_hexpand(True)
 
         topbar = Gtk.Box(spacing=5)
