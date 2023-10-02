@@ -40,7 +40,10 @@ class Panel(ScreenPanel):
         self.mms2 = _("mm/s²")
         self.mms3 = _("mm³/s")
         self.status_grid = self.move_grid = self.time_grid = self.extrusion_grid = None
-
+        macros = self._printer.get_config_section_list("gcode_macro ") # Changes
+        self.neopixels = any("NEOPIXEL_ON" in macro.upper() for macro in macros) # Changes
+        self.ledhotend = any("LED_HOTEND_OFF" in macro.upper() for macro in macros) # Changes
+        
         data = ['pos_x', 'pos_y', 'pos_z', 'time_left', 'duration', 'slicer_time', 'file_time',
                 'filament_time', 'est_time', 'speed_factor', 'req_speed', 'max_accel', 'extrude_factor', 'zoffset',
                 'zoffset', 'filament_used', 'filament_total', 'advance', 'layer', 'total_layers', 'height',
@@ -148,6 +151,7 @@ class Panel(ScreenPanel):
             'fan': self._gtk.Button("fan", "-", None, self.bts, Gtk.PositionType.LEFT, 1),
             'elapsed': self._gtk.Button("clock", "-", None, self.bts, Gtk.PositionType.LEFT, 1),
             'left': self._gtk.Button("hourglass", "-", None, self.bts, Gtk.PositionType.LEFT, 1),
+            'layers': self._gtk.Button("layer", "-", None, self.bts, Gtk.PositionType.LEFT, 1), # Changes
         }
         for button in buttons:
             buttons[button].set_halign(Gtk.Align.START)
@@ -226,19 +230,21 @@ class Panel(ScreenPanel):
         szfe = Gtk.Grid()
         szfe.set_column_homogeneous(True)
         szfe.attach(self.buttons['speed'], 0, 0, 3, 1)
-        szfe.attach(self.buttons['z'], 2, 0, 2, 1)
+        szfe.attach(self.buttons['z'], 2, 1, 2, 1) # Changes
+        szfe.attach(self.buttons['elapsed'], 0, 2, 3, 1) # Changes
+        szfe.attach(self.buttons['layers'], 2, 2, 2, 1) # Changes
         if self._printer.get_tools():
             szfe.attach(self.buttons['extrusion'], 0, 1, 3, 1)
         if self._printer.get_fans():
-            szfe.attach(self.buttons['fan'], 2, 1, 2, 1)
+            szfe.attach(self.buttons['fan'], 2, 0, 2, 1) # Changes
 
         info = Gtk.Grid()
         info.set_row_homogeneous(True)
         info.get_style_context().add_class("printing-info")
         info.attach(self.labels['temp_grid'], 0, 0, 1, 1)
         info.attach(szfe, 0, 1, 1, 2)
-        info.attach(self.buttons['elapsed'], 0, 3, 1, 1)
-        info.attach(self.buttons['left'], 0, 4, 1, 1)
+        # Changes
+        info.attach(self.buttons['left'], 0, 3, 1, 1) # Changes
         self.status_grid = info
 
     def create_extrusion_grid(self, widget=None):
@@ -297,7 +303,8 @@ class Panel(ScreenPanel):
         self.move_grid = info
         self.buttons['z'].connect("clicked", self.switch_info, self.move_grid)
         self.buttons['speed'].connect("clicked", self.switch_info, self.move_grid)
-
+        self.buttons['layers'].connect("clicked", self.switch_info, self.move_grid) # Changes
+        
     def create_time_grid(self, widget=None):
         goback = self._gtk.Button("back", None, "color3", self.bts, Gtk.PositionType.TOP, False)
         goback.connect("clicked", self.switch_info, self.status_grid)
@@ -365,10 +372,11 @@ class Panel(ScreenPanel):
             'fine_tune': self._gtk.Button("fine-tune", _("Fine Tuning"), "color4"),
             'menu': self._gtk.Button("complete", _("Main Menu"), "color4"),
             'pause': self._gtk.Button("pause", _("Pause"), "color1"),
-            'restart': self._gtk.Button("refresh", _("Restart"), "color3"),
+            'restart': self._gtk.Button("refresh", _("Reprint"), "color3"), # Changes
             'resume': self._gtk.Button("resume", _("Resume"), "color1"),
-            'save_offset_probe': self._gtk.Button("home-z", _("Save Z") + "\n" + "Probe", "color1"),
-            'save_offset_endstop': self._gtk.Button("home-z", _("Save Z") + "\n" + "Endstop", "color2"),
+            #'save_offset_probe': self._gtk.Button("home-z", _("Save") + "\n" + "Z-Offset", "color1"), # Changes
+            #'save_offset_endstop': self._gtk.Button("home-z", _("Save") + "\n" + "Z-Endstop", "color2"), # Changes
+            'wait': self._gtk.Button("info",_("Please wait..."), "color1"), # Changes
         }
         self.buttons['cancel'].connect("clicked", self.cancel)
         self.buttons['control'].connect("clicked", self._screen._go_to_submenu, "")
@@ -378,43 +386,44 @@ class Panel(ScreenPanel):
         self.buttons['pause'].connect("clicked", self.pause)
         self.buttons['restart'].connect("clicked", self.restart)
         self.buttons['resume'].connect("clicked", self.resume)
-        self.buttons['save_offset_probe'].connect("clicked", self.save_offset, "probe")
-        self.buttons['save_offset_endstop'].connect("clicked", self.save_offset, "endstop")
+        #self.buttons['save_offset_probe'].connect("clicked", self.save_offset, "probe") # Changes
+        #self.buttons['save_offset_endstop'].connect("clicked", self.save_offset, "endstop") # Changes
 
-    def save_offset(self, widget, device):
-        sign = "+" if self.zoffset > 0 else "-"
-        label = Gtk.Label()
-        if device == "probe":
-            probe = self._printer.get_probe()
-            saved_z_offset = probe['z_offset'] if probe else "?"
-            label.set_label(_("Apply %s%.3f offset to Probe?") % (sign, abs(self.zoffset))
-                            + "\n\n"
-                            + _("Saved offset: %s") % saved_z_offset)
-        elif device == "endstop":
-            label.set_label(_("Apply %s%.3f offset to Endstop?") % (sign, abs(self.zoffset)))
-        label.set_hexpand(True)
-        label.set_halign(Gtk.Align.CENTER)
-        label.set_vexpand(True)
-        label.set_valign(Gtk.Align.CENTER)
-        label.set_line_wrap(True)
-        label.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
+   #def save_offset(self, widget, device):
+        #sign = "+" if self.zoffset > 0 else "-"
+        #label = Gtk.Label()
+        #if device == "probe":
+            #probe = self._printer.get_probe()
+            #saved_z_offset = probe['z_offset'] if probe else "?"
+            #label.set_label(_("Apply %s%.3f offset to Probe?") % (sign, abs(self.zoffset))
+                            #+ "\n\n"
+                            #+ _("Saved offset: %s") % saved_z_offset)
+        #elif device == "endstop":
+            #label.set_label(_("Apply %s%.3f offset to Endstop?") % (sign, abs(self.zoffset)))
+        #label.set_hexpand(True)
+        #label.set_halign(Gtk.Align.CENTER)
+        #label.set_vexp # Start Changesand(True)
+        #label.set_valign(Gtk.Align.CENTER)
+        #label.set_line_wrap(True)
+        #label.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
 
-        grid = self._gtk.HomogeneousGrid()
-        grid.attach(label, 0, 0, 1, 1)
-        buttons = [
-            {"name": _("Apply"), "response": Gtk.ResponseType.APPLY},
-            {"name": _("Cancel"), "response": Gtk.ResponseType.CANCEL}
-        ]
-        self._gtk.Dialog(_("Save Z"), buttons, grid, self.save_confirm, device)
+        #grid = self._gtk.HomogeneousGrid()
+        #grid.attach(label, 0, 0, 1, 1)
+        #buttons = [
+            #{"name": _("Apply"), "response": Gtk.ResponseType.APPLY},
+            #{"name": _("Cancel"), "response": Gtk.ResponseType.CANCEL}
+        #]
+        #self._gtk.Dialog(_("Save Z"), buttons, grid, self.save_confirm, device)
 
-    def save_confirm(self, dialog, response_id, device):
-        self._gtk.remove_dialog(dialog)
-        if response_id == Gtk.ResponseType.APPLY:
-            if device == "probe":
-                self._screen._ws.klippy.gcode_script("Z_OFFSET_APPLY_PROBE")
-            if device == "endstop":
-                self._screen._ws.klippy.gcode_script("Z_OFFSET_APPLY_ENDSTOP")
-            self._screen._ws.klippy.gcode_script("SAVE_CONFIG")
+    #def save_confirm(self, dialog, response_id, device):
+        #self._gtk.remove_dialog(dialog)
+        #if response_id == Gtk.ResponseType.APPLY:
+            #if device == "probe":
+                #self._screen._ws.klippy.gcode_script("Z_OFFSET_APPLY_PROBE")
+            #if device == "endstop":
+                #self._screen._ws.klippy.gcode_script("Z_OFFSET_APPLY_ENDSTOP")
+            #self._screen._ws.klippy.gcode_script("SAVE_CONFIG")
+    # End Changes
 
     def restart(self, widget):
         if self.filename:
@@ -465,10 +474,14 @@ class Panel(ScreenPanel):
         self.set_state("cancelling")
         self.disable_button("pause", "resume", "cancel")
         self._screen._ws.klippy.print_cancel()
+        if self.ledhotend: # Changes
+            self._screen._ws.klippy.gcode_script(f"LED_HOTEND_OFF") # Changes
 
     def close_panel(self, widget=None):
         if self.can_close:
             logging.debug("Closing job_status panel")
+            if self.neopixels: # Changes
+                self._screen._ws.klippy.gcode_script(f"NEOPIXEL_ON") # Changes
             self._screen.state_ready(wait=False)
 
     def enable_button(self, *args):
@@ -533,7 +546,7 @@ class Panel(ScreenPanel):
         if "gcode_move" in data:
             with suppress(KeyError):
                 self.pos_z = round(float(data['gcode_move']['gcode_position'][2]), 2)
-                self.buttons['z'].set_label(f"Z: {self.pos_z:6.2f}{f'/{self.oheight}' if self.oheight > 0 else ''}")
+                self.buttons['z'].set_label(f"Z: {self.pos_z:6.2f}{f'/{self.oheight} {self.mm}' if self.oheight > 0 else ''}") # Changes
             with suppress(KeyError):
                 self.extrusion = round(float(data["gcode_move"]["extrude_factor"]) * 100)
                 self.labels['extrude_factor'].set_label(f"{self.extrusion:3}%")
@@ -627,7 +640,7 @@ class Panel(ScreenPanel):
         fila_used = float(self._printer.get_stat('print_stats', 'filament_used'))
         progress = float(self._printer.get_stat("virtual_sdcard", "progress"))
         self.labels["duration"].set_label(self.format_time(total_duration))
-        elapsed_label = f"{self.labels['elapsed'].get_text()}  {self.labels['duration'].get_text()}"
+        elapsed_label = f"{self.labels['elapsed'].get_text()} {self.labels['duration'].get_text()}" # Changes
         self.buttons['elapsed'].set_label(elapsed_label)
         estimated = 0
         slicer_time = filament_time = file_time = None
@@ -677,8 +690,10 @@ class Panel(ScreenPanel):
 
         self.labels["est_time"].set_label(self.format_time(estimated))
         self.labels["time_left"].set_label(self.format_eta(estimated, print_duration))
-        remaining_label = f"{self.labels['left'].get_text()}  {self.labels['time_left'].get_text()}"
+        remaining_label = f"{self.labels['left'].get_text()} {self.labels['time_left'].get_text()}" # Changes
         self.buttons['left'].set_label(remaining_label)
+        layer_label = f"{self.labels['layer_lbl'].get_text()} {1 + round((self.pos_z - self.f_layer_h) / self.layer_h)} / {self.labels['total_layers'].get_text()}" # Changes
+        self.buttons['layers'].set_label(layer_label) # Changes
         self.update_progress(progress)
 
     def update_progress(self, progress: float):
@@ -735,29 +750,42 @@ class Panel(ScreenPanel):
             self.enable_button("resume", "cancel")
             self.can_close = False
         else:
-            offset = self._printer.get_stat("gcode_move", "homing_origin")
-            self.zoffset = float(offset[2]) if offset else 0
-            if self.zoffset != 0:
-                if "Z_OFFSET_APPLY_ENDSTOP" in self._printer.available_commands:
-                    self.buttons['button_grid'].attach(self.buttons["save_offset_endstop"], 0, 0, 1, 1)
-                else:
-                    self.buttons['button_grid'].attach(Gtk.Label(), 0, 0, 1, 1)
-                if "Z_OFFSET_APPLY_PROBE" in self._printer.available_commands:
-                    self.buttons['button_grid'].attach(self.buttons["save_offset_probe"], 1, 0, 1, 1)
-                else:
-                    self.buttons['button_grid'].attach(Gtk.Label(), 1, 0, 1, 1)
-            else:
-                self.buttons['button_grid'].attach(Gtk.Label(), 0, 0, 1, 1)
-                self.buttons['button_grid'].attach(Gtk.Label(), 1, 0, 1, 1)
+            #Start Changes
+            #offset = self._printer.get_stat("gcode_move", "homing_origin")
+            #self.zoffset = float(offset[2]) if offset else 0
+            #if self.zoffset != 0:
+                #if "Z_OFFSET_APPLY_ENDSTOP" in self._printer.available_commands:
+                    #self.buttons['button_grid'].attach(self.buttons["save_offset_endstop"], 0, 0, 1, 1)
+                #else:
+                    #self.buttons['button_grid'].attach(Gtk.Label(), 0, 0, 1, 1)
+                #if "Z_OFFSET_APPLY_PROBE" in self._printer.available_commands:
+                    #self.buttons['button_grid'].attach(self.buttons["save_offset_probe"], 1, 0, 1, 1)
+                #else:
+                    #self.buttons['button_grid'].attach(Gtk.Label(), 1, 0, 1, 1)
+            #else:
+                #self.buttons['button_grid'].attach(Gtk.Label(), 0, 0, 1, 1)
+                #self.buttons['button_grid'].attach(Gtk.Label(), 1, 0, 1, 1)
 
-            if self.filename:
-                self.buttons['button_grid'].attach(self.buttons['restart'], 2, 0, 1, 1)
-                self.enable_button("restart")
-            else:
-                self.disable_button("restart")
+            #if self.filename:
+                #self.buttons['button_grid'].attach(self.buttons['restart'], 2, 0, 1, 1)
+                #self.enable_button("restart")
+            #else:
+                #self.disable_button("restart")
+            #if self.state != "cancelling":
+                #self.buttons['button_grid'].attach(self.buttons['menu'], 3, 0, 1, 1)
+                #self.can_close = True
+            if self.state == "cancelling":
+                self.buttons['button_grid'].attach(Gtk.Label(""), 0, 0, 1, 1)
+                self.buttons['button_grid'].attach(Gtk.Label(""), 1, 0, 1, 1)
+                self.buttons['button_grid'].attach(Gtk.Label(""), 2, 0, 1, 1)
+                self.buttons['button_grid'].attach(self.buttons['wait'], 3, 0, 1, 1)
             if self.state != "cancelling":
+                self.buttons['button_grid'].attach(Gtk.Label(""), 0, 0, 1, 1)
+                self.buttons['button_grid'].attach(Gtk.Label(""), 1, 0, 1, 1)
+                self.buttons['button_grid'].attach(self.buttons['restart'], 2, 0, 1, 1)
                 self.buttons['button_grid'].attach(self.buttons['menu'], 3, 0, 1, 1)
                 self.can_close = True
+        # End Changes
         self.content.show_all()
 
     def show_file_thumbnail(self):
