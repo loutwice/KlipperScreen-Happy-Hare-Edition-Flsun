@@ -21,6 +21,9 @@ class Panel(MenuPanel):
         self.main_menu.set_vexpand(True)
         scroll = self._gtk.ScrolledWindow()
         self.numpad_visible = False
+        macros = self._printer.get_gcode_macros() # Changes
+        self.pid_start = any("_PID_KS_START" in macro.upper() for macro in macros) # Changes
+        self.pid_end = any("_PID_KS_END" in macro.upper() for macro in macros) # Changes
 
         logging.info("### Making MainMenu")
 
@@ -198,20 +201,31 @@ class Panel(MenuPanel):
         max_temp = int(float(self._printer.get_config_section(self.active_heater)['max_temp']))
         logging.debug(f"{temp}/{max_temp}")
         if temp > max_temp:
-            self._screen.show_popup_message(_("Can't set above the maximum:") + f' {max_temp}')
+            self._screen.show_popup_message(_("Can't set above the maximum:") + f' {max_temp}' + "C°") # Changes
             return False
         return max(temp, 0)
 
     def pid_calibrate(self, temp):
-        if self.verify_max_temp(temp):
-            script = {"script": f"PID_CALIBRATE HEATER={self.active_heater} TARGET={temp}"}
-            self._screen._confirm_send_action(
-                None,
-                _("Initiate a PID calibration for:") + f" {self.active_heater} @ {temp} ºC"
-                + "\n\n" + _("It may take more than 5 minutes depending on the heater power."),
-                "printer.gcode.script",
-                script
-            )
+           if not self.pid_start or not self.pid_end: # Changes
+                script = {"script": f"PID_CALIBRATE HEATER={self.active_heater} TARGET={temp}"}
+                self._screen._confirm_send_action(
+                    None,
+                    _("Initiate a PID calibration for:") + f" {self.active_heater} @ {temp} ºC"
+                    + "\n\n" + _("It may take more than 5 minutes depending on the heater power."),
+                    "printer.gcode.script",
+                    script
+                )
+            # Start Changes
+            else:
+                script = {"script": f"_PID_KS_START\nPID_CALIBRATE HEATER={self.active_heater} TARGET={temp}\n_PID_KS_END"}
+                self._screen._confirm_send_action(
+                    None,
+                    _("Initiate a PID calibration for:") + f" {self.active_heater} @ {temp} ºC"
+                    + "\n\n" + _("It may take more than 5 minutes depending on the heater power."),
+                    "printer.gcode.script",
+                    script
+                )
+            # End Changes
 
     def create_left_panel(self):
 
