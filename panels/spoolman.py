@@ -396,7 +396,9 @@ class Panel(ScreenPanel):
         for spool in spools["result"]:
             spoolObject = SpoolmanSpool(**spool)
             self._model.append(None, [spoolObject])
-            if spoolObject.filament.material not in materials:
+             if not hasattr(spoolObject.filament, 'material'):
+                spoolObject.filament.material = ''
+            elif spoolObject.filament.material not in materials:
                 materials.append(spoolObject.filament.material)
 
         materials.sort()
