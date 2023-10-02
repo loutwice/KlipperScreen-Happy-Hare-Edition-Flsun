@@ -100,6 +100,8 @@ class ScreenPanel:
             logging.debug(f"[{section}] {option} changed to {value}")
             self._config.set(section, option, value)
             self._config.save_user_config_options()
+            if self._config.get_main_config().getboolean('touch_sound', True): # Changes
+                self._screen._button_pressed_feedback() # Changes
             if callback is not None:
                 callback(value)
 
@@ -116,6 +118,8 @@ class ScreenPanel:
             self._config.get_config().add_section(section)
         self._config.set(section, option, "True" if switch.get_active() else "False")
         self._config.save_user_config_options()
+         if self._config.get_main_config().getboolean('touch_sound', True): # Changes
+            self._screen._button_pressed_feedback() # Changes
         if callback is not None:
             callback(switch.get_active())
 
